@@ -3,7 +3,7 @@ import multer from "multer";
 import {
   obtenerGatos,
   registrarGato,actualizarGato,
-  eliminarGato,
+  eliminarGato,buscarGatos,
 } from "../controllers/gato.controllers.js";
 
 const router = express.Router();
@@ -24,6 +24,8 @@ router.put("/gato/:id",
    actualizarGato);
 
 router.delete("/gato/:id", eliminarGato);
+
+router.get("/gatos/buscar", buscarGatos);   // nueva ruta
 
 router.get("/gatos", obtenerGatos);
 
