@@ -1,6 +1,31 @@
 import db from "../firebase.js";
 import supabase from "../supabase.js";
 
+export const guardarAuditoria = async ({
+  accion,
+  gatoId,
+  valoresAnteriores = null,
+  valoresNuevos = null,
+  req,
+}) => {
+  try {
+    await db.collection("auditoria_gatos").add({
+      accion,
+      gatoId: gatoId || null,
+      fecha: new Date().toISOString(),
+      ip: req.auditoria?.ip || "desconocida",
+      userAgent: req.auditoria?.userAgent || "desconocido",
+      metodo: req.auditoria?.metodo || req.method,
+      ruta: req.auditoria?.ruta || req.originalUrl,
+      valoresAnteriores,
+      valoresNuevos,
+    });
+  } catch (err) {
+    // No rompemos la operación principal si falla el log
+    console.error("Error al guardar auditoría:", err.message);
+  }
+};
+
 export const registrarGato = async (req, res) => {
   try {
     const { nombre, edad, peso, raza } = req.body || {};
@@ -63,6 +88,21 @@ export const registrarGato = async (req, res) => {
       fecha: new Date().toISOString(),
     });
 
+    await guardarAuditoria({
+      accion: "crear",
+      gatoId: docRef.id,
+      valoresAnteriores: null,
+      valoresNuevos: {
+        nombre,
+        edad: Number(edad),
+        peso: Number(peso),
+        raza,
+        imagenUrl,
+      },
+      req,
+    });
+
+
     res.status(201).json({
       mensaje: `¡Gato registrado con éxito! ID: ${docRef.id} | Nombre: ${nombre} | Edad: ${edad} años | Peso: ${peso} kg | Raza: ${raza}`,
       id: docRef.id,
@@ -92,6 +132,8 @@ export const actualizarGato = async (req, res) => {
 
     const docRef = db.collection("gatos").doc(id);
     const doc = await docRef.get();
+
+    const datosAnteriores = doc.data();   
 
     if (!doc.exists) {
       return res.status(404).json({
@@ -145,6 +187,28 @@ export const actualizarGato = async (req, res) => {
       imagenUrl
     });
 
+    const valoresNuevos = {
+      nombre,
+      edad: Number(edad),
+      peso: Number(peso),
+      raza,
+      imagenUrl,
+    };
+
+    await guardarAuditoria({
+      accion: "actualizar",
+      gatoId: id,
+      valoresAnteriores: {
+        nombre: datosAnteriores.nombre,
+        edad: datosAnteriores.edad,
+        peso: datosAnteriores.peso,
+        raza: datosAnteriores.raza,
+        imagenUrl: datosAnteriores.imagenUrl,
+      },
+      valoresNuevos,
+      req,
+    });
+
     res.status(200).json({
       mensaje: `¡Gato actualizado con éxito! ID: ${id} | Nombre: ${nombre}`,
       id,
@@ -165,6 +229,8 @@ export const eliminarGato = async (req, res) => {
 
     const docRef = db.collection("gatos").doc(id);
     const doc = await docRef.get();
+
+    const datosAnteriores = doc.data();
 
     if (!doc.exists) {
       return res.status(404).json({
@@ -188,6 +254,20 @@ export const eliminarGato = async (req, res) => {
 
     // Eliminar el documento de Firestore
     await docRef.delete();
+
+    await guardarAuditoria({
+      accion: "eliminar",
+      gatoId: id,
+      valoresAnteriores: {
+        nombre: datosAnteriores.nombre,
+        edad: datosAnteriores.edad,
+        peso: datosAnteriores.peso,
+        raza: datosAnteriores.raza,
+        imagenUrl: datosAnteriores.imagenUrl,
+      },
+      valoresNuevos: null,
+      req,
+    });
 
     res.status(200).json({
       mensaje: `Gato eliminado con éxito. ID: ${id}`,

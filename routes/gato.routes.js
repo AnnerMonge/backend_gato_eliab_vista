@@ -5,8 +5,11 @@ import {
   registrarGato,actualizarGato,
   eliminarGato,buscarGatos,
 } from "../controllers/gato.controllers.js";
+import { capturarInfoSolicitud } from "../middlewares/auditoria.js";
 
 const router = express.Router();
+
+router.use(capturarInfoSolicitud); 
 
 const upload = multer({
   storage: multer.memoryStorage(),
