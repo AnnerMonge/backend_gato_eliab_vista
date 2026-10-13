@@ -4,12 +4,14 @@ import {
   obtenerGatos,
   registrarGato,actualizarGato,
   eliminarGato,buscarGatos,
+  enviarGatosPorEmail,   // Importe el nuevo controlador
 } from "../controllers/gato.controllers.js";
 import { capturarInfoSolicitud } from "../middlewares/auditoria.js";
 
 const router = express.Router();
 
 router.use(capturarInfoSolicitud); 
+router.get('/gatos/enviar-email', enviarGatosPorEmail);
 
 const upload = multer({
   storage: multer.memoryStorage(),
