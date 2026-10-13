@@ -8,6 +8,8 @@ import {
 } from "../controllers/gato.controllers.js";
 import { capturarInfoSolicitud } from "../middlewares/auditoria.js";
 
+
+
 const router = express.Router();
 
 router.use(capturarInfoSolicitud); 
