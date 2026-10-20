@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { calcularEstadisticas } from "./estadisticas.controller.js";
+import PDFDocument from "pdfkit";
 
 export const exportarEstadisticasExcel = async (req, res) => {
   try {
